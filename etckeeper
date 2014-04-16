@@ -120,15 +120,8 @@ if [ -z "$VCS" ]; then
 fi
 export VCS
 
-lsscripts() {
-	LANG=C perl -e '
-		$dir=shift;
-		print join "\n", grep { ! -d $_ && -x $_ }
-			grep /^\Q$dir\/\E[-a-zA-Z0-9]+$/,
-			glob "$dir/*";
-	' "$1"
-}
-
-for script in $(lsscripts "$ETCKEEPER_CONF_DIR/$command.d"); do
-	"$script" "$@"
+for script in $ETCKEEPER_CONF_DIR/$command.d/*; do
+	if [ ! -d "$script" -a -x "$script" ]; then
+		"$script" "$@"
+	fi
 done
