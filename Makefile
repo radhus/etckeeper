@@ -4,7 +4,7 @@ CONFFILE=etckeeper.conf
 include $(CONFFILE)
 
 DESTDIR?=
-prefix=/usr
+prefix=/usr/local
 bindir=${prefix}/bin
 etcdir=/etc
 mandir=${prefix}/share/man
@@ -15,11 +15,11 @@ INSTALL_EXE=${INSTALL}
 INSTALL_DATA=${INSTALL} -m 0644
 PYTHON=python
 
-build: etckeeper.spec etckeeper.version
+build: etckeeper.spec etckeeper.version pkgng
 	-$(PYTHON) ./etckeeper-bzr/__init__.py build || echo "** bzr support not built"
 	-$(PYTHON) ./etckeeper-dnf/etckeeper.py build || echo "** DNF support not built"
 
-install: etckeeper.version
+install: etckeeper.version pkgng.install
 	mkdir -p $(DESTDIR)$(etcdir)/etckeeper/ $(DESTDIR)$(vardir)/cache/etckeeper/
 	$(CP) *.d $(DESTDIR)$(etcdir)/etckeeper/
 	$(INSTALL_DATA) $(CONFFILE) $(DESTDIR)$(etcdir)/etckeeper/etckeeper.conf
@@ -66,4 +66,15 @@ etckeeper.version:
 	sed -i~ "s/Version:.*/Version: $$(perl -e '$$_=<>;print m/\((.*?)\)/'<debian/changelog)\"/" etckeeper
 	rm -f etckeeper~
 
-.PHONY: etckeeper.spec etckeeper.version
+pkgng:
+	cd pkgng && /usr/bin/make
+
+pkgng.install:
+	cd pkgng && /usr/bin/make install
+	@echo "** Make sure to add the following line to /usr/local/etc/pkg.conf"
+	@echo "PLUGINS [ etckeeper ] "
+	@echo ""
+	@echo "** Also move /usr/local/etc to e.g. /etc/local create a symlink to keep it in the /etc repository"
+	@echo ""
+
+.PHONY: etckeeper.spec etckeeper.version pkgng pkgng.install
